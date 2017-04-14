@@ -2,15 +2,27 @@
 
 const express = require('express');
 const simpleOauthModule = require('simple-oauth2');
+const exphbs = require('express-handlebars');
+const cookieParser = require('cookie-parser');
+const bodyParser = require('body-parser');
+const rp = require('request-promise');
 
 const app = express();
+app.set('views', './views')
+
+app.engine('handlebars', exphbs())
+app.set('view engine', 'handlebars')
+
+app.use(cookieParser())
+app.use(bodyParser())
+
 const oauth2 = simpleOauthModule.create({
   client: {
     id: 'testApp',
-    secret: 'KsIPFOFQ5UVQn9W7SHVd82u13f8Af2FX6AADPndQecQ',
+    secret: 'hMwuYNz2YYSGhwRh_lX0k3QWFQv3Sv5VmBNxgNMZo92',
   },
   auth: {
-    tokenHost: 'http://localhost:3000',
+    tokenHost: 'http://edu.updust.com',
     tokenPath: '/oauth/token',
     authorizePath: '/oauth/authorize',
   },
@@ -18,13 +30,11 @@ const oauth2 = simpleOauthModule.create({
 
 // Authorization uri definition
 const authorizationUri = oauth2.authorizationCode.authorizeURL({
-  redirect_uri: 'http://localhost:4000/callback',
-  scope: 'notifications'
+  redirect_uri: 'http://app0.geekernel.com/callback'
 });
 
-// Initial page redirecting to Github
+// Initial page redirecting to platform
 app.get('/auth', (req, res) => {
-  console.log(authorizationUri);
   res.redirect(authorizationUri);
 });
 
@@ -44,9 +54,8 @@ app.get('/callback', (req, res) => {
     console.log('The resulting token: ', result);
     const token = oauth2.accessToken.create(result);
 
-    return res
-      .status(200)
-      .json(token);
+    res.cookie('token', token)
+    res.redirect('/')
   });
 });
 
@@ -55,12 +64,25 @@ app.get('/success', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-  res.send('Hello<br><a href="/auth">Log in via OAuth2</a>');
+	var token = req.cookies['token'] && req.cookies['token'].token
+
+	if (token) {
+		// console.log(`http://localhost:3000/account?access_token=${token.access_token}`)
+		rp({
+			url: `http://localhost:3000/account`,
+			qs: {
+				access_token: token.access_token
+			},
+			json: true
+		}).then(function(r) {
+			var username = r.username
+			res.render('index', {username: username})
+		})
+	}
+
 });
 
 app.listen(4000, () => {
-  console.log('Express server started on port 4000'); // eslint-disable-line
+  console.log('Express server started on port 4000');
 });
 
-
-// Credits to [@lazybean](https://github.com/lazybean)

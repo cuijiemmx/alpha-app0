@@ -69,7 +69,7 @@ app.get('/', (req, res) => {
 	if (token) {
 		// console.log(`http://localhost:3000/account?access_token=${token.access_token}`)
 		rp({
-			url: `http://localhost:3000/account`,
+			url: `http://edu.updust.com/account`,
 			qs: {
 				access_token: token.access_token
 			},
@@ -77,7 +77,11 @@ app.get('/', (req, res) => {
 		}).then(function(r) {
 			var username = r.username
 			res.render('index', {username: username})
+		}).catch(function () {
+			res.render('index')
 		})
+	} else {
+		res.render('index')
 	}
 
 });

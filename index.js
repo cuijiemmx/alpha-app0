@@ -69,7 +69,7 @@ app.get('/', (req, res) => {
 	if (token) {
 		// console.log(`http://localhost:3000/account?access_token=${token.access_token}`)
 		rp({
-			url: `http://edu.updust.com/account`,
+			url: `http://edu.updust.com/api/users/me`,
 			qs: {
 				access_token: token.access_token
 			},
